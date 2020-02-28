@@ -1,0 +1,83 @@
+
+
+eureka 1 eureka module  9000  test http://localhost:9001/
+           1.1 pom引入包 spring-boot-starter-web spring-cloud-starter-eureka-server(服务端)
+           1.2 配置yml
+           1.3 启动类 增加 @EnableEurekaServer //服务端启动类 接收其他注册进来
+
+       2 provider module 8000  test http://localhost:8000/category/getList
+           2.1 pom引入包 spring-boot-starter-web  spring-cloud-starter-eureka(客户端 注册)
+               额外，父包 spring-boot-starter-actuatore(eureka完善信息)
+           2.2 配置yml server spring mybatis-plus eureka(把服务注册到eureka)
+           2.3 启动类 增加 @EnableEurekaClient //开启注册到eureka
+
+       3 consumer module 8081  http://localhost:8081/consumer/category/getList
+            3.1 pom引入包 spring-cloud-starter-eureka spring-cloud-starter-eureka(客户端 注册)
+            3.2 配置yml port eureka(defaultZone 从eureka 获取服务)
+            注   配置 fetch-registry: false  #register-with-eureka: false  》》报错：
+                  a.lang.IllegalStateException: No instances available for PROVIDER-01 》注释掉
+            3.3 启动类配置 增加 @EnableEurekaClient //到eureka 获取服务
+            3.4 负载均衡配置包
+                法一: RestTemplateConfig  @LoadBalanced RestTemplate 注入   IRule 注入
+                法二: 自定义均衡策略 看ribbon 说明
+
+
+
+
+ribbon: consumer-feign module 8082  http://localhost:8082/consumer/category/getList
+        1 引入包 spring-cloud-starter-eureka spring-cloud-starter-ribbon
+        2 yml Eureka 配置访问注册中心(只访问不注册)
+        3 主启动类加注解 @EnableEurekaClient
+        4 添加配置类 com.zhu.springcloud.config.ribbon.RestTemplateConfig
+          往ioc注入 RestTemplate
+          4.1 法1：往ioc 注入 IRule 均衡规则
+              法2：自定义 MyIRule 类
+
+              //在微服务启动时，就加载自定义ribbon类 name eureka服务ID名 configuration MyIRule.CLASS
+              //@RibbonClient(name = "SPRINGCLOUD-PROVIDER-01",configuration =MyIRule.class )
+              参考官方：https://www.springcloud.cc/spring-cloud-dalston.html#spring-cloud-ribbon
+              (不能被主应用程序@ComponentScan 扫描到)
+        5 在controller类 @Autowired RestTemplate
+          根据provider 配置的yml
+          spring.application.name: springcloud-provider-01 >>>
+          指定服务提供地址前缀 REST_URL_PRIFIX="SPRINGCLOUD-PROVIDER-01";
+          (即注册中心上面的服务id名)
+        6 自定义ribbon:
+           @EnableEurekaClient(name="eureka上的应用服务名",configuration="自定义IRule,class")
+           注：自定义IRule 所在包不能被 启动类 scanBasePackages 扫描到
+
+
+
+Feign : consumer-feign module 8082  http://localhost:8082/consumer/category/getList
+        Feign 集成了Ribbon更简单 面向接口编程
+
+        直接在接口服务 module 配置    //让consumer调用 即这里的provider配置不用
+        1 在 api module  引入包 spring-cloud-starter-eureka spring-cloud-starter-feign
+        2  在 api module 添加服务包 创建接口 加注解 @FeignClient(value="PROVIDER-01") @Component
+        2.在consumer-feign module 引入包 spring-cloud-starter-feign
+        3 启动类加注解 @EnbleFeignClient(bacsePackage="@FeignClient的包") @ComponentScan("@FeignClient的包")
+
+Hystrix:
+        1 服务熔断 服务端配置
+            provider module  @HystrixCommand
+            1.1 pom引入 spring-cloud-starter-hystrix
+            1.2 controller 包 每个方法添加注解 @HystrixCommand(fallbackMethod = "") //fallbackMethod 调用的其他方法名
+            1.3 启动类添加熔断支持注解@EnableCircuitBreaker
+        2 服务降级 使用feign 客户端配置
+            2.1 api module 添加 com.zhu.springcloud.feign.hystrix 包 创建类实现 FallbackFactory 用于缺省时回调
+            2.2 feign 接口服务注解FeignClient 添加参数键值 fallbackFactory = CategoryFallbckFactory.class
+            2.3  consumer-feign module yml 配置 feign.hystrix.enabled=true
+
+        3 Hystrix Dashboard 监控 springcloud-consumer module  http://localhost:8081/hystrix
+            3.1 pringcloud-consumer module pom 导入 spring-cloud-starter-hystrix-dashboard
+            3.2 yml 配置
+            3.3 启动类加注解 @EnableHystrixDashboard 开启
+            3.4 服务端 springcloud-provider module 引入有 spring-boot-starter-actuator
+            3.5 服务端  ServletRegistrationBean 注入 HystrixMetricsStreamServlet reg.addUrlMappings("/actuator/hystrix.stream");
+            3.6  访问  http://localhost:8000/actuator/hystrix.stream
+            3.7 客户端 http://localhost:8081/hystrix 输入 服务端 地址 http://localhost:8000/actuator/hystrix.stream
+
+gateway  zuul 9100    http://eureka00.com:9100/provider-01/category/getList
+        1 新建module 引入 spring-cloud-starter-zuul
+        2  yml 配置
+        3  启动类添加注解 EnableZuulProxy

@@ -1,0 +1,44 @@
+server:
+  port: 9100
+spring:
+  application:
+    name: service-zuul
+eureka:
+  client:
+    service-url:
+      defaultZone: http://eureka00.com:9000/eureka/,http://eureka01.com:9001/eureka/
+  instance:
+    instance-id: zuul9100.com
+    prefer-ip-address: true
+
+zuul:
+  routes:
+    feign-service:
+
+
+
+
+
+
+#  routes:
+   #   feign-service:
+    #    service
+     #   path:
+      #producer:
+       # strip-prefix: false
+
+
+
+
+info:
+  app.name: zhu-springcloud
+  company.name: zhu.com
+
+#zuul:
+ # routes:
+  #  api-a:
+   #   path: /api-a/**
+    #  serviceId: service-ribbon//
+    #api-b:
+      #path: /api-b/**
+      #serviceId: service-feign

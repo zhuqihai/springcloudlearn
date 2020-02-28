@@ -1,0 +1,20 @@
+server:
+  port: 8082
+
+#Eureka配置
+
+eureka:
+  #instance:
+    #instance-id:
+    #prefer-ip-address: true
+  client:
+    #fetch-registry: false #只访问，不向注册中心注册
+    #register-with-eureka: false
+    service-url:
+      #访问注册中心地址
+      defaultZone: http://eureka01.com:9001/eureka/,http://eureka00.com:9000/eureka/
+
+#开启 feign hystrix 降级功能
+feign:
+  hystrix:
+    enabled: true

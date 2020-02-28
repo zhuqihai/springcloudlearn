@@ -1,0 +1,46 @@
+server:
+  port: 8001
+
+
+spring:
+  application:
+    name: PROVIDER-01
+  datasource:
+    driver-class-name: com.mysql.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/mydatabase?useUnicode=true&characterEncoding=utf-8&useSSL=false&allowMultiQueries=true
+    username: root
+    password: 123456
+
+#mybatis配置
+mybatis-plus:
+  #扫描mapper文件
+  #mapper-locations: classpah:/mapper/*Mapper.java
+  #扫描实体
+  type-aliases-package: com.zhu.springcloud.entity
+    #主键类型
+  # 主键类型
+  global-config:
+    #0:"数据库ID自增", 1:"用户输入ID",2:"全局唯一ID (数字类型唯一ID)", 3:"全局唯一ID UUID";
+    id-type: 0
+    #字段策略 0:"忽略判断",1:"非 NULL 判断"),2:"非空判断"
+    field-strategy: 0
+    #驼峰下划线转换
+    db-column-underline: true
+    #刷新mapper 调试神器
+    refresh-mapper: true
+    #数据库大写下划线转换
+    #capital-mode: true
+    #自定义SQL注入器
+    configuration:
+      map-underscore-to-camel-case: true
+      cache-enabled: true
+
+
+#服务注册到eureka
+eureka:
+  client:
+    service-url:
+      defaultZone: http://eureka01.com:9001/eureka/,http://eureka00.com:9000/eureka/  #注册集群 逗号隔开
+  #instance:
+   # instance-id: PROVIDER-0101  #修改status 显示名
+    #prefer-ip-address: true

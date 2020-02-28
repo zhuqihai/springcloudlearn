@@ -1,0 +1,24 @@
+server:
+  port: 9001
+
+eureka:
+  instance:
+    hostname: eureka01.com #eureka 服务端2实例名
+    #prefer-ip-address: true
+    #instance-id: spring.cloud.client.ipAddress:{server.port} # 将Instance ID设置成IP:端口的形式
+    #使用IP注册
+    #prefer-ip-address: true
+    #ip-address: 192.168.1.1 #强制指定IP地址，默认会获取本机的IP地址
+    #instance-id: ${spring.cloud.client.ip-address}:${server.port}
+    #hostname: ${spring.cloud.client.ip-address}
+
+  client:
+    register-with-eureka: false #s是否注册自己
+    fetch-registry: false #false 表示自己为注册中心
+    #healthcheck:
+      #enabled: true
+    service-url: #监控页面
+      defaultZone: http://eureka00.com:9000/eureka/,http://eureka01.com:9001/eureka/
+      #defaultZone: http://${eureka.instance.hostname}:${server.port}/eureka/
+  server:
+    enable-self-preservation: false #false 为退出自我保护机制 不建议
